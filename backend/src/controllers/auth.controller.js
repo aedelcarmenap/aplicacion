@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import {createAccessToken} from "../libs/jwt.js";
+import { createAccessToken } from "../libs/jwt.js";
 
 export const register = async (req, res) => {
   const { email, password, username } = req.body;
@@ -24,8 +24,47 @@ export const register = async (req, res) => {
       updatedAt: userSaved.updatedAt,
     });
   } catch (error) {
-     res.status(500).json({message:error.message});
+    res.status(500).json({ message: error.message });
   }
 };
 
-export const login = (req, res) => res.send("login");
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const userFound = await User.findOne({ email });
+    if (!userFound)
+      return res.status(400).json({ message: "El usuario no esta registrado" });
+    const matchPassword = await bcrypt.compare(password, userFound.password);
+    if (!matchPassword) {
+      return re
+        .status(400)
+        .json({ message: "Password incorrecto", token: mull });
+    } else {
+      const token = await createAccessToken({ id: userFound._id });
+      res.cookie("token", token);
+      res.json({
+        message: "Bienvenido",
+        id: userFound.id,
+        username: userFound.username,
+        email: userFound.email,
+      });
+    }
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error en el inicio de sesión", error });
+  }
+};
+
+export const logout = (req, res) => {
+  res.cookie("token", "", {
+    expires: new Date(0),
+  });
+  return res.sendStatus(200);
+};
+
+export const profile = (req, res) => {
+  const userFound = User.findById(req.user.id);
+  if (!userFound) return res.status(400).json({ message: "User not found" });
+  res.send("profile");
+};
