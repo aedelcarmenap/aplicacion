@@ -7,8 +7,7 @@ export const register = async (req, res) => {
 
   try {
     const userFound = await User.findOne({ email });
-    if (userFound)
-      return res.status(400).json(["the email is already in use"]);
+    if (userFound) return res.status(400).json(["the email is already in use"]);
 
     const passwordHash = await bcrypt.hash(password, 10);
 
@@ -48,10 +47,11 @@ export const login = async (req, res) => {
       const token = await createAccessToken({ id: userFound._id });
       res.cookie("token", token);
       res.json({
-        message: "Bienvenido",
         id: userFound.id,
         username: userFound.username,
         email: userFound.email,
+        createdAt: userFound.createdAt,
+        updatedAt: userFound.updatedAt,
       });
     }
   } catch (error) {
